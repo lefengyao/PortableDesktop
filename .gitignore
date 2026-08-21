@@ -1,0 +1,25 @@
+# 编译产物
+[Bb]in/
+[Oo]bj/
+publish/
+
+# Visual Studio / Rider 用户配置
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# 测试结果
+[Tt]est[Rr]esult*/
+[TestResults/]**
+
+# NuGet
+*.nupkg
+packages/
+
+# 系统文件
+Thumbs.db
+Desktop.ini
+.DS_Store
