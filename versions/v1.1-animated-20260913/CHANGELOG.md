@@ -41,6 +41,7 @@
 | 新增 `Models/ThemeCatalog.cs` | 主题的单一真源。旧版在 `App.xaml.cs` 与 `MainWindow` 各维护一份主题名字符串数组，改主题要动两处、容易失配 |
 | `MainWindow.xaml.cs` 重构 | 删除 `CreateItemCard`/`CreatePlaceholderIcon`/`FindResource` 取色的全部命令式代码（-150 行），改用 `ItemsControl` + `ObservableCollection<DesktopItem>` 数据绑定；`RefreshItems()` 不再重建整棵可视树 |
 | 主题切换只换颜色字典 | 旧版 `MergedDictionaries.Clear()` 会把所有字典清掉重建；现在按 Source 定位主题字典原地替换，`Shared.xaml` 保持不变 |
+| `PortableDesktop.csproj` 去掉 `System.Drawing.Common` | 图标提取改成纯 Win32 Shell API 后该包已无任何引用，删掉它让项目**零 NuGet 依赖**：clone 下来直接 `dotnet build`，不需要联网还原 |
 
 ## 三、动效（全部走 GPU 合成的 Scale/Translate/Opacity，不触发重新布局）
 
@@ -73,6 +74,8 @@
 
 ## 五、验证
 
+### 编译
+
 本机沙箱内 NuGet 无法运行（`ProgramData` 等环境变量被剥离，NuGet 解析机器级设置目录时抛
 `Value cannot be null (Parameter 'path1')`），因此改用「跳过包资产解析」的方式做编译校验：
 
@@ -83,13 +86,26 @@ dotnet build PortableDesktop/PortableDesktop.csproj -c Debug --no-restore \
   -p:GenerateRuntimeConfigurationFiles=false
 ```
 
-结果：**已成功生成。0 个警告，0 个错误。**
+结果：**已成功生成。0 个警告，0 个错误。**（Debug / Release 均通过）
 
 8 个 XAML 全部成功编译为 BAML：`App.baml`、`MainWindow.baml`、`Controls/ItemCard.baml`、
 `Themes/{Light,Pink,Acrylic,Green}Theme.baml`、`Themes/Shared.baml`。
 
-> 注意：该命令**只是本沙箱的编译校验手段**，产出的 exe 缺少 `deps.json`/`runtimeconfig.json`，不能直接运行。
-> 在正常环境（有网络、NuGet 可用）请直接 `dotnet build` / `dotnet run`，无需任何特殊参数。
+### 运行
+
+`publish/` 里的成品已实机启动验证：进程启动 4 秒后枚举其顶层窗口，拿到
+**可见窗口「便携桌面」，尺寸 767×604**（即用户保存的窗口大小），同时存在 WPF 的
+`MediaContextNotificationWindow` 等辅助窗口 —— 说明新的 XAML 与卡片模板在真实运行时
+加载无误（若 XAML 有解析错误，`InitializeComponent()` 会直接让进程崩溃退出）。
+
+> 说明：因为本沙箱生成不了 `deps.json` / `runtimeconfig.json`，`publish/` 里的这两个文件
+> 是按「零包依赖」的标准格式**手工补齐**的 —— 与移除 `System.Drawing.Common` 之后
+> `dotnet publish` 会生成的内容一致。在正常环境执行 `dotnet publish` 会自动生成同样的文件。
+
+### 未覆盖
+
+`PortableDesktop.Tests`（xUnit）在本沙箱**未能执行**（需要还原 xunit 包，而 NuGet 不可用）。
+改动集中在 UI 层与 `IconExtractorService`（原本就没有单元测试），但仍建议在正常环境跑一次 `dotnet test`。
 
 ## 六、文件清单
 
@@ -104,7 +120,9 @@ docs/ui-preview-v1.1.html      ← 浏览器里直接看新版 UI（含 4 套主
 ```
 
 改写：`MainWindow.xaml`、`MainWindow.xaml.cs`、`App.xaml`、`App.xaml.cs`、
-`Services/IconExtractorService.cs`、`Themes/*Theme.xaml`（四套色板重新生成，键集合统一）
+`Services/IconExtractorService.cs`、`Themes/*Theme.xaml`（四套色板重新生成，键集合统一）、
+`PortableDesktop.csproj`（移除 `System.Drawing.Common`，**项目从此零 NuGet 依赖**）
 
 未改动：`Models/DesktopItem.cs`、`Models/AppSettings.cs`、`Services/DesktopItemService.cs`、
-`Services/JsonStorageService.cs`、`Services/ShortcutParserService.cs`、`PortableDesktop.csproj`
+`Services/JsonStorageService.cs`、`Services/ShortcutParserService.cs`
+

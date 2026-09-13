@@ -13,7 +13,10 @@
     <Resource Include="app.ico" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
-  </ItemGroup>
+  <!--
+    本项目零 NuGet 依赖：
+    图标提取全部走 Win32 Shell API（shell32/user32），不再使用 System.Drawing；
+    WPF 与 System.Windows.Interop 由 net9.0-windows 自带的 WindowsDesktop 框架提供。
+    好处是 clone 下来直接 dotnet build 即可，不需要联网还原任何包。
+  -->
 </Project>

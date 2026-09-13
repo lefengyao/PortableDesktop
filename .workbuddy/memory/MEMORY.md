@@ -23,10 +23,16 @@ WPF (.NET 9) 桌面启动器。把文件/快捷方式拖进无边框圆角窗口
 - `MaxButton.Content` 一律用显式转义 `"\uE923"`/`"\uE922"`，不要贴裸 PUA 字符。
 
 ## 本机验证
+- **项目零 NuGet 依赖**（图标提取纯 Win32 Shell API，WPF 由 net9.0-windows 自带）——
+  不要再给它加包引用，加了就会退回"必须联网还原"的状态。
 - 沙箱内 NuGet 不可用（详见用户级 `~/.workbuddy/MEMORY.md`），编译校验用：
-  `dotnet build PortableDesktop/PortableDesktop.csproj -c Debug --no-restore -p:SkipResolvePackageAssets=true -p:GenerateDependencyFile=false -p:GenerateRuntimeConfigurationFiles=false`
-- XAML 是否真编译：看 `obj/Debug/net9.0-windows/**/*.baml` 是否包含 `MainWindow` / `Controls/ItemCard` / `Themes/*`。
-- 单元测试（xUnit）在本沙箱跑不了（需要还原 xunit 包），需要在正常环境执行 `dotnet test`。
+  `dotnet build PortableDesktop/PortableDesktop.csproj -c Release --no-restore -p:SkipResolvePackageAssets=true -p:GenerateDependencyFile=false -p:GenerateRuntimeConfigurationFiles=false`
+- XAML 是否真编译：看 `obj/<cfg>/net9.0-windows/**/*.baml` 是否包含 `MainWindow` / `Controls/ItemCard` / `Themes/*`。
+- **运行验证**：上一条命令产不出 `deps.json` / `runtimeconfig.json`，可在 `bin/<cfg>/net9.0-windows/` 里
+  手写一份最小 `deps.json`（零包依赖格式）并沿用旧的 `runtimeconfig.json`，然后启动进程、
+  用 `EnumWindows` 枚举该 PID 窗口，能看到标题「便携桌面」的可见窗口即说明 XAML 运行时无恙。
+- 单元测试（xUnit）在本沙箱跑不了（需要还原 xunit 包），需在正常环境执行 `dotnet test`。
+- `publish/` 里放的是可直接运行的成品（当前是手工补齐的两个 json + 真实构建产物）。
 
 ## 版本快照
 - `versions/v1.0-baseline-20260913/`：优化前原版（含 SHA-256 清单 `SNAPSHOT.md`），git 标签 `v1.0-baseline`
