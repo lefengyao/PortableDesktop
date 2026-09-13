@@ -26,17 +26,15 @@ WPF (.NET 9) 桌面启动器。把文件/快捷方式拖进无边框圆角窗口
 - 窗口阴影：最大化时必须置 `WindowBorder.Effect = null` 并收掉圆角/边框，否则屏幕边缘会出现一圈阴影。
 - `MaxButton.Content` 一律用显式转义 `"\uE923"`/`"\uE922"`，不要贴裸 PUA 字符。
 
-## 本机验证
-- **项目零 NuGet 依赖**（图标提取纯 Win32 Shell API，WPF 由 net9.0-windows 自带）——
-  不要再给它加包引用，加了就会退回"必须联网还原"的状态。
-- 沙箱内 NuGet 不可用（详见用户级 `~/.workbuddy/MEMORY.md`），编译校验用：
-  `dotnet build PortableDesktop/PortableDesktop.csproj -c Release --no-restore -p:SkipResolvePackageAssets=true -p:GenerateDependencyFile=false -p:GenerateRuntimeConfigurationFiles=false`
+## 本机构建与发布
+- 沙箱里跑 dotnet 必须用 **`.dotnet.py`**（env 补丁：`ProgramFiles(x86)` 等被剥离的变量；
+  根因是 NuGet 在 Windows 上读 `PROGRAMFILES(X86)` 取机器级设置目录，bash 设不了带括号名）：
+  - 编译：`python .dotnet.py build PortableDesktop/PortableDesktop.csproj -c Release --nologo`
+  - 发布自包含单文件：`python .dotnet.py publish PortableDesktop/PortableDesktop.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none -o publish-selfcontained`
+- 两个发行版：`publish/`（约 300KB 框架依赖版，目标机要装 .NET 9 桌面运行时）、
+  `publish-selfcontained/PortableDesktop.exe`（约 60MB 自包含单文件，发谁都能双击；已 gitignore）
 - XAML 是否真编译：看 `obj/<cfg>/net9.0-windows/**/*.baml` 是否包含 `MainWindow` / `Controls/ItemCard` / `Themes/*`。
-- **运行验证**：上一条命令产不出 `deps.json` / `runtimeconfig.json`，可在 `bin/<cfg>/net9.0-windows/` 里
-  手写一份最小 `deps.json`（零包依赖格式）并沿用旧的 `runtimeconfig.json`，然后启动进程、
-  用 `EnumWindows` 枚举该 PID 窗口，能看到标题「便携桌面」的可见窗口即说明 XAML 运行时无恙。
-- 单元测试（xUnit）在本沙箱跑不了（需要还原 xunit 包），需在正常环境执行 `dotnet test`。
-- `publish/` 里放的是可直接运行的成品（当前是手工补齐的两个 json + 真实构建产物）。
+- 单元测试：`python .dotnet.py test PortableDesktop.Tests/PortableDesktop.Tests.csproj`（现在能跑了）。
 
 ## 版本快照
 - **v1.0 基线只存在于 git**：标签 `v1.0-baseline`（提交 58504b8）。快照目录
