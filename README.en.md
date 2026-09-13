@@ -21,9 +21,10 @@
 
 - 🖱️ **Drag & Drop** — Drop any file or shortcut into the window to add it to the icon grid (duplicates are ignored automatically)
 - 🔗 **Shortcut Parsing** — Automatically reads the name, target path, and custom icon from `.lnk` files
-- 🎯 **Real Icon Extraction** — Extracts the original program icons via the Win32 Shell API, rendered in high quality
+- 🎯 **Real Icon Extraction** — Extracts the original program icons via the Win32 Shell API, centered and rendered in high quality
 - ⚡ **One-Click Launch** — Click any icon to instantly open the corresponding program or file
-- 🗑️ **Right-Click Management** — Remove items in one right-click
+- 📋 **Context Menu** — Open / Reveal in Explorer / Remove from panel
+- ✨ **Smooth Motion** — Staggered card entrance, hover scale, press rebound, fade on theme switch
 - 🎨 **Four Themes** — Light / Pink / Acrylic / Eye-care Green; switch anytime, saved on the spot
 - 🪟 **Frameless Elegance** — Rounded corners + soft shadow + custom title bar, with dragging, edge resizing, and maximize support
 - 📌 **Remembers Everything** — Window position, size, and theme are persisted automatically — no more "lost" windows after changing monitors

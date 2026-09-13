@@ -1,0 +1,171 @@
+<UserControl x:Class="PortableDesktop.Controls.ItemCard"
+             x:Name="Root"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="98" Height="110" Margin="5"
+             Background="Transparent"
+             Cursor="Hand"
+             SnapsToDevicePixels="True"
+             UseLayoutRounding="True"
+             ToolTip="{Binding Item.TargetPath, ElementName=Root}"
+             MouseEnter="Card_MouseEnter"
+             MouseLeave="Card_MouseLeave"
+             MouseLeftButtonDown="Card_MouseLeftButtonDown"
+             MouseLeftButtonUp="Card_MouseLeftButtonUp">
+
+    <UserControl.Resources>
+        <CubicEase x:Key="EaseOut" EasingMode="EaseOut"/>
+        <BackEase x:Key="EaseSpring" EasingMode="EaseOut" Amplitude="0.8"/>
+
+        <!-- 右键菜单：打开 / 定位 / 移除 -->
+        <ContextMenu x:Key="ItemMenu">
+            <MenuItem Header="打开" Click="MenuOpen_Click">
+                <MenuItem.Icon>
+                    <TextBlock Text="&#xE8E5;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="打开所在文件夹" Click="MenuReveal_Click">
+                <MenuItem.Icon>
+                    <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="从面板移除" Foreground="#E5484D" Click="MenuRemove_Click">
+                <MenuItem.Icon>
+                    <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                               Foreground="#E5484D"/>
+                </MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+
+        <!-- 悬停：卡片微放大 + 高亮层渐显 + 阴影加深外扩 + 图标微放大 -->
+        <Storyboard x:Key="HoverIn">
+            <DoubleAnimation Storyboard.TargetName="CardScale" Storyboard.TargetProperty="ScaleX"
+                             To="1.055" Duration="0:0:0.16" EasingFunction="{StaticResource EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetName="CardScale" Storyboard.TargetProperty="ScaleY"
+                             To="1.055" Duration="0:0:0.16" EasingFunction="{StaticResource EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetName="HoverLayer" Storyboard.TargetProperty="Opacity"
+                             To="1" Duration="0:0:0.16" EasingFunction="{StaticResource EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetName="PlateHot" Storyboard.TargetProperty="Opacity"
+                             To="1" Duration="0:0:0.16" EasingFunction="{StaticResource EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetName="CardShadow" Storyboard.TargetProperty="Opacity"
+                             To="0.26" Duration="0:0:0.16"/>
+            <DoubleAnimation Storyboard.TargetName="CardShadow" Storyboard.TargetProperty="BlurRadius"
+                             To="20" Duration="0:0:0.16"/>
+            <DoubleAnimation Storyboard.TargetName="CardShadow" Storyboard.TargetProperty="ShadowDepth"
+                             To="5" Duration="0:0:0.16"/>
+            <DoubleAnimation Storyboard.TargetName="IconScale" Storyboard.TargetProperty="ScaleX"
+                             To="1.08" Duration="0:0:0.16" EasingFunction="{StaticResource EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetName="IconScale" Storyboard.TargetProperty="ScaleY"
+                             To="1.08" Duration="0:0:0.16" EasingFunction="{StaticResource EaseOut}"/>
+        </Storyboard>
+
+        <Storyboard x:Key="HoverOut">
+            <DoubleAnimation Storyboard.TargetName="CardScale" Storyboard.TargetProperty="ScaleX"
+                             To="1" Duration="0:0:0.22" EasingFunction="{StaticResource EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetName="CardScale" Storyboard.TargetProperty="ScaleY"
+                             To="1" Duration="0:0:0.22" EasingFunction="{StaticResource EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetName="HoverLayer" Storyboard.TargetProperty="Opacity"
+                             To="0" Duration="0:0:0.22"/>
+            <DoubleAnimation Storyboard.TargetName="PlateHot" Storyboard.TargetProperty="Opacity"
+                             To="0" Duration="0:0:0.22"/>
+            <DoubleAnimation Storyboard.TargetName="CardShadow" Storyboard.TargetProperty="Opacity"
+                             To="0.12" Duration="0:0:0.22"/>
+            <DoubleAnimation Storyboard.TargetName="CardShadow" Storyboard.TargetProperty="BlurRadius"
+                             To="11" Duration="0:0:0.22"/>
+            <DoubleAnimation Storyboard.TargetName="CardShadow" Storyboard.TargetProperty="ShadowDepth"
+                             To="2" Duration="0:0:0.22"/>
+            <DoubleAnimation Storyboard.TargetName="IconScale" Storyboard.TargetProperty="ScaleX"
+                             To="1" Duration="0:0:0.22" EasingFunction="{StaticResource EaseOut}"/>
+            <DoubleAnimation Storyboard.TargetName="IconScale" Storyboard.TargetProperty="ScaleY"
+                             To="1" Duration="0:0:0.22" EasingFunction="{StaticResource EaseOut}"/>
+        </Storyboard>
+
+        <!-- 按下：整体回缩，给指尖一个明确的"已经吃到点击"的反馈 -->
+        <Storyboard x:Key="Press">
+            <DoubleAnimation Storyboard.TargetName="CardScale" Storyboard.TargetProperty="ScaleX"
+                             To="0.94" Duration="0:0:0.07"/>
+            <DoubleAnimation Storyboard.TargetName="CardScale" Storyboard.TargetProperty="ScaleY"
+                             To="0.94" Duration="0:0:0.07"/>
+        </Storyboard>
+
+        <!-- 抬起：回弹到悬停尺寸 -->
+        <Storyboard x:Key="ReleaseHover">
+            <DoubleAnimation Storyboard.TargetName="CardScale" Storyboard.TargetProperty="ScaleX"
+                             To="1.055" Duration="0:0:0.24" EasingFunction="{StaticResource EaseSpring}"/>
+            <DoubleAnimation Storyboard.TargetName="CardScale" Storyboard.TargetProperty="ScaleY"
+                             To="1.055" Duration="0:0:0.24" EasingFunction="{StaticResource EaseSpring}"/>
+        </Storyboard>
+
+        <!-- 抬起：回弹到常态尺寸 -->
+        <Storyboard x:Key="ReleaseIdle">
+            <DoubleAnimation Storyboard.TargetName="CardScale" Storyboard.TargetProperty="ScaleX"
+                             To="1" Duration="0:0:0.24" EasingFunction="{StaticResource EaseSpring}"/>
+            <DoubleAnimation Storyboard.TargetName="CardScale" Storyboard.TargetProperty="ScaleY"
+                             To="1" Duration="0:0:0.24" EasingFunction="{StaticResource EaseSpring}"/>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <Grid x:Name="CardRoot" Background="Transparent" RenderTransformOrigin="0.5,0.5"
+          ContextMenu="{StaticResource ItemMenu}">
+        <Grid.RenderTransform>
+            <TransformGroup>
+                <ScaleTransform x:Name="CardScale" ScaleX="1" ScaleY="1"/>
+                <TranslateTransform x:Name="CardOffset" X="0" Y="0"/>
+            </TransformGroup>
+        </Grid.RenderTransform>
+
+        <Border x:Name="CardBorder" CornerRadius="16"
+                Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect x:Name="CardShadow" BlurRadius="11" ShadowDepth="2"
+                                  Opacity="0.12" Color="{DynamicResource CardShadowColor}"
+                                  RenderingBias="Performance"/>
+            </Border.Effect>
+
+            <Grid>
+                <!-- 悬停高亮层：单独一层做渐显，避免颜色切换的硬跳变 -->
+                <Border x:Name="HoverLayer" CornerRadius="16" Opacity="0"
+                        Background="{DynamicResource CardHoverBackgroundBrush}"
+                        BorderBrush="{DynamicResource CardHoverBorderBrush}"
+                        BorderThickness="1"/>
+
+                <Grid Margin="9,8,9,9">
+                    <Grid.RowDefinitions>
+                        <!-- 图标盘放在弹性行里垂直居中，名称贴底：
+                             旧版整块内容从卡片顶部往下堆，所以图标看着"顶格偏上" -->
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Width="56" Height="56"
+                          HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border CornerRadius="18"
+                                Background="{DynamicResource IconContainerBrush}"
+                                BorderBrush="{DynamicResource IconPlateBorderBrush}"
+                                BorderThickness="1"/>
+                        <Border x:Name="PlateHot" CornerRadius="18" Opacity="0"
+                                Background="{DynamicResource IconContainerHotBrush}"/>
+                        <Image x:Name="IconImage" Width="32" Height="32"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Stretch="Uniform" RenderTransformOrigin="0.5,0.5"
+                               RenderOptions.BitmapScalingMode="HighQuality">
+                            <Image.RenderTransform>
+                                <ScaleTransform x:Name="IconScale" ScaleX="1" ScaleY="1"/>
+                            </Image.RenderTransform>
+                        </Image>
+                    </Grid>
+
+                    <TextBlock x:Name="NameText" Grid.Row="1"
+                               Text="{Binding Item.Name, ElementName=Root}"
+                               FontSize="12" FontWeight="Medium"
+                               Foreground="{DynamicResource WindowForegroundBrush}"
+                               TextAlignment="Center" TextTrimming="CharacterEllipsis"
+                               MaxWidth="84" Margin="0,7,0,0"/>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
