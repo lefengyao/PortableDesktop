@@ -23,3 +23,6 @@ packages/
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# 自包含发行版（大文件不入库）
+publish-selfcontained/
