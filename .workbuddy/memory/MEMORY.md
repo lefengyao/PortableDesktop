@@ -39,6 +39,8 @@ WPF (.NET 9) 桌面启动器。把文件/快捷方式拖进无边框圆角窗口
 - `publish/` 里放的是可直接运行的成品（当前是手工补齐的两个 json + 真实构建产物）。
 
 ## 版本快照
-- `versions/v1.0-baseline-20260913/`：优化前原版（含 SHA-256 清单 `SNAPSHOT.md`），git 标签 `v1.0-baseline`
+- **v1.0 基线只存在于 git**：标签 `v1.0-baseline`（提交 58504b8）。快照目录
+  `versions/v1.0-baseline-20260913/` 已按用户要求移除，找回用
+  `git checkout v1.0-baseline -- versions/v1.0-baseline-20260913`（内含 SHA-256 清单 SNAPSHOT.md）。
 - `versions/v1.1-animated-20260913/`：动效 + UI 美化 + 代码重构版，变更见其 `CHANGELOG.md`
 - `docs/ui-preview-v1.1.html`：新版 UI 的浏览器预览（不编译也能看效果）
