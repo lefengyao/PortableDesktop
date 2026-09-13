@@ -43,12 +43,15 @@ public partial class ItemCard : UserControl
 
     public static readonly DependencyProperty IconServiceProperty = DependencyProperty.Register(
         nameof(IconService), typeof(IconExtractorService), typeof(ItemCard),
-        new PropertyMetadata(null, OnItemChanged));
+        new PropertyMetadata(IconExtractorService.Shared, OnItemChanged));
 
-    /// <summary>图标提取服务，由 MainWindow 注入（走绑定，不用静态全局状态）。</summary>
-    public IconExtractorService? IconService
+    /// <summary>
+    /// 图标提取服务。由 MainWindow 经模板绑定注入；
+    /// 默认值就是进程级共享实例，所以即使注入没生效，图标也照样能显示。
+    /// </summary>
+    public IconExtractorService IconService
     {
-        get => (IconExtractorService?)GetValue(IconServiceProperty);
+        get => (IconExtractorService)GetValue(IconServiceProperty);
         set => SetValue(IconServiceProperty, value);
     }
 
@@ -70,7 +73,7 @@ public partial class ItemCard : UserControl
 
     private void ApplyItem()
     {
-        if (Item is null || IconService is null)
+        if (Item is null)
             return;
 
         IconImage.Source = IconService.GetIcon(Item.IconPath, Item.IconIndex);

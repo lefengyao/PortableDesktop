@@ -33,6 +33,12 @@ public partial class MainWindow : Window
     private bool _themeReady;
     private bool _dragActive;
 
+    /// <summary>
+    /// 供卡片模板绑定用的图标服务（DataTemplate 里用 AncestorType=Window 取到这里）。
+    /// 属性名必须与 ItemCard.IconService 的绑定路径一致，改名前先搜一下 XAML。
+    /// </summary>
+    public IconExtractorService IconService => _iconExtractor;
+
     public MainWindow(DesktopItemService itemService, IconExtractorService iconExtractor,
                       AppSettings settings, Action onSettingsChanged)
     {

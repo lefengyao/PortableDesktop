@@ -14,6 +14,10 @@ WPF (.NET 9) 桌面启动器。把文件/快捷方式拖进无边框圆角窗口
 - `MainWindow.xaml(.cs)`：`ItemsControl` + `ObservableCollection<DesktopItem>` 绑定，不再手写可视树。
 
 ## 硬性约束
+- **卡片 → 窗口的连接靠 XAML 绑定**：`MainWindow` 必须暴露 `public IconExtractorService IconService`
+  （DataTemplate 里用 `{Binding IconService, RelativeSource={RelativeSource AncestorType=Window}}` 取）。
+  重命名/删掉它不会有任何编译错误，只会让图标整片消失 —— **WPF 绑定失败是静默的**，
+  改这里务必实机启动看一眼。`ItemCard.IconService` 的默认值已设为 `IconExtractorService.Shared` 兜底。
 - **切换主题只替换颜色字典**：按 `Source` 找到 `Themes/*Theme.xaml` 原地替换，绝不能 `MergedDictionaries.Clear()`
   （会把 `Shared.xaml` 里的模板和动效一起清掉）。
 - **卡片布局**：卡片 98×110 / 圆角 16，内边距 9,8,9,9；图标盘 56×56 / 圆角 18；图标 32px；

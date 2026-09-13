@@ -22,6 +22,13 @@ namespace PortableDesktop.Services;
 /// </summary>
 public class IconExtractorService
 {
+    /// <summary>
+    /// 进程级共享实例。图标缓存本来就是全局有用的，
+    /// 同时它也是 ItemCard 里 IconService 依赖属性的默认值 ——
+    /// 万一绑定/注入哪天失效，卡片也会退回用这个实例，图标不会整片消失。
+    /// </summary>
+    public static IconExtractorService Shared { get; } = new();
+
     private readonly Dictionary<string, ImageSource> _cache = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _gate = new();
 

@@ -126,3 +126,32 @@ docs/ui-preview-v1.1.html      ← 浏览器里直接看新版 UI（含 4 套主
 未改动：`Models/DesktopItem.cs`、`Models/AppSettings.cs`、`Services/DesktopItemService.cs`、
 `Services/JsonStorageService.cs`、`Services/ShortcutParserService.cs`
 
+---
+
+## 七、交付后修复：图标整片消失（2026-09-13 09:30）
+
+**现象**：面板里 25 个应用全部只剩空白的图标盘，名称正常显示。
+
+**根因**：`MainWindow.xaml.cs` 里只留了私有字段 `_iconExtractor`，**漏写了 XAML 要绑定的那个公开属性**：
+
+```xml
+<!-- MainWindow.xaml 的 DataTemplate -->
+IconService="{Binding IconService, RelativeSource={RelativeSource AncestorType=Window}}"
+```
+
+绑定路径找不到宿主属性 → 静默取到 `null` → `ItemCard.ApplyItem()` 第一行
+`if (Item is null || IconService is null) return;` 直接返回，图标从未被赋值。
+**这类绑定失败 WPF 不抛异常、只在调试输出里留一行 trace，编译期完全看不出来** —— 这也是它逃过编译校验的原因。
+
+**修法（两处，互为兜底）**：
+
+1. 补上 `public IconExtractorService IconService => _iconExtractor;`；
+2. `IconExtractorService.Shared`（进程级共享实例）作为 `ItemCard.IconService` 依赖属性的**默认值**。
+   以后即使注入环节再出问题，卡片也会退回共享实例，图标不会整片消失。
+
+**同时修掉**：主题下拉框显示的是 record 的 `ToString()`（`ThemeInfo { Id = …, DisplayName = … }`，
+被窄下拉框截断成 `Theme…`）。给 `ThemeInfo` 覆写 `ToString() => DisplayName` 即恢复成「浅色 / 粉色 / …」。
+
+**这次的验证方式**（编译通过 ≠ 界面正确）：实机启动后枚举窗口、抓窗口位图逐格核对 ——
+25 个图标全部正常渲染、四套主题配色正确、图标盘居中与名称贴底符合预期。
+

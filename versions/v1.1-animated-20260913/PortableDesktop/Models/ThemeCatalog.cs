@@ -2,8 +2,12 @@ namespace PortableDesktop.Models;
 
 /// <summary>
 /// 一套主题的元数据：内部 Id（对应 Themes/{Id}Theme.xaml）与界面显示名。
+/// ToString 直接返回显示名 —— 下拉框、日志、调试器里看到的就是「浅色」而不是 record 展开式。
 /// </summary>
-public sealed record ThemeInfo(string Id, string DisplayName);
+public sealed record ThemeInfo(string Id, string DisplayName)
+{
+    public override string ToString() => DisplayName;
+}
 
 /// <summary>
 /// 主题的单一真源。窗口下拉、启动校验、资源字典路径三处都从这里取，
