@@ -160,6 +160,15 @@ public partial class ItemCard : UserControl
         Storyboard.SetTargetProperty(rise, new PropertyPath(TranslateTransform.YProperty));
         sb.Children.Add(rise);
 
+        // 播完立刻摘除动画并把值定住：Storyboard 默认 HoldEnd，时钟会一直挂在
+        // Active 状态，几十张卡片累积起来足以让渲染循环每帧空转（GPU 常驻高占用）。
+        sb.Completed += (_, _) =>
+        {
+            CardRoot.Opacity = 1;
+            CardRoot.BeginAnimation(OpacityProperty, null);
+            CardOffset.Y = 0;
+            CardOffset.BeginAnimation(TranslateTransform.YProperty, null);
+        };
         sb.Begin();
     }
 }

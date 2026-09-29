@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  安装程序界面的简体中文字符串表（WixStdBA / WixStandardBootstrapperApplication）。
+
+  背景（2026-09-21 核实）：
+    WixStdBA 自带主题只内置英文资源。WiX 源码里 stdbas 的资源目录中，
+    2052（简体中文）只有 wixpreq.wxl（.NET 依赖的提示语），**没有主界面资源**，
+    所以中文界面必须自己提供一份完整字符串表。
+
+  用法：
+    在 Bundle.wxs 的 WixStandardBootstrapperApplication 上加
+        LocalizationFile="zh-CN.wxl"
+    字符串 ID 与官方 HyperlinkTheme.wxl 一一对应（Id 名必须完全一致，
+    因为主题 XML 里是靠 #(loc.XXX) 按名引用的），仅 Value 换成中文。
+
+  翻译约定：
+    1. & 是访问键前缀（菜单/按钮 Alt+字母），中文界面通常配「(&X)」形式，
+       本文件统一写成「文字(&X)」，Alt+对应字母即可聚焦/触发。
+    2. 文案尽量用「安装」「卸载」「修复」这类 Windows 中文版惯用词，
+       而不是直译，减少用户理解成本。
+    3. 实体转义：&lt; &gt; &amp; &#xA; 与原英文一致（&#xA; 是换行）。
+-->
+<WixLocalization Culture="zh-cn" Language="2052" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+
+  <!-- ============ 窗口 ============ -->
+  <String Id="Caption" Value="[WixBundleName] 安装程序" />
+  <String Id="Title" Value="[WixBundleName]" />
+
+  <!-- ============ 欢迎页（Install） ============ -->
+  <String Id="InstallHeader" Value="欢迎使用" />
+  <!--
+    这两条"简短说明"是欢迎页正文，WixStdBA 按是否显示 Options 按钮二选一：
+      有 Options 按钮 → InstallMessageOptions
+      没有           → InstallMessage
+    我们的主题是 hyperlinkLargeLicense，Options 按钮存在，所以用户看到的是
+    InstallMessageOptions 这一条 —— 下面把它写成有实际指引意义的文案，
+    顺便解决"欢迎页中间一片空白"的观感问题。
+  -->
+  <String Id="InstallMessage" Value="安装程序将在您的电脑上安装 [WixBundleName]。点击「安装」开始，或点击「取消」退出。" />
+  <String Id="InstallMessageOptions" Value="安装程序将在您的电脑上安装 [WixBundleName]，并在您选择的目录下新建「便携桌面」文件夹。点击「安装」开始安装；如需更改安装位置，请先点击「选项」；点击「取消」退出安装。" />
+  <String Id="InstallVersion" Value="版本 [WixBundleVersion]" />
+  <String Id="ConfirmCancelMessage" Value="确定要取消安装吗？" />
+  <String Id="ExecuteUpgradeRelatedBundleMessage" Value="检测到已安装的旧版本" />
+
+  <!-- ============ 帮助页 ============ -->
+  <String Id="HelpHeader" Value="安装程序帮助" />
+  <String Id="HelpText" Value="/install | /repair | /uninstall | /layout [目录] — 安装、修复、卸载，或在该目录中创建完整副本。默认为安装。&#xA;&#xA;/passive | /quiet — 显示精简界面、不提示，或完全不显示界面也不提示。默认为显示界面和全部提示。&#xA;&#xA;/norestart — 抑制任何重启尝试。默认为重启前提示。&#xA;/log 日志文件 — 输出日志到指定文件。默认在 %TEMP% 下创建日志文件。" />
+  <String Id="HelpCloseButton" Value="关闭(&amp;C)" />
+
+  <!-- ============ 许可协议（本项目未启用 LicenseUrl，保留条目以防后续需要） ============ -->
+  <String Id="InstallLicenseLinkText" Value="[WixBundleName] &lt;a href=&quot;#&quot;&gt;许可条款&lt;/a&gt;。" />
+  <String Id="InstallAcceptCheckbox" Value="我同意许可条款和条件(&amp;A)" />
+
+  <!-- ============ 欢迎页按钮 ============ -->
+  <String Id="InstallOptionsButton" Value="选项(&amp;O)" />
+  <String Id="InstallInstallButton" Value="安装(&amp;I)" />
+  <String Id="InstallCancelButton" Value="取消(&amp;C)" />
+
+  <!-- ============ 选项页（在这里选安装目录） ============ -->
+  <String Id="OptionsHeader" Value="安装选项" />
+  <!-- 这里填的是【父目录】：程序会在该目录下自动新建「便携桌面」文件夹装进去，
+       卸载时整个子文件夹被清掉，不会碰该目录里你自己的文件。 -->
+  <String Id="OptionsLocationLabel" Value="安装位置（将新建「便携桌面」子文件夹）：" />
+  <String Id="OptionsPerUserScopeText" Value="仅为我安装 [WixBundleName](&amp;M)" />
+  <String Id="OptionsPerMachineScopeText" Value="为所有用户安装 [WixBundleName](&amp;U)" />
+  <String Id="OptionsBrowseButton" Value="浏览(&amp;B)" />
+  <String Id="OptionsOkButton" Value="确定(&amp;O)" />
+  <String Id="OptionsCancelButton" Value="取消(&amp;C)" />
+
+  <!-- ============ 进度页 ============ -->
+  <String Id="ProgressHeader" Value="正在安装" />
+  <String Id="ProgressLabel" Value="正在处理：" />
+  <String Id="OverallProgressPackageText" Value="正在初始化…" />
+  <String Id="ProgressCancelButton" Value="取消(&amp;C)" />
+
+  <!-- ============ 维护页（已安装后再运行安装包） ============ -->
+  <String Id="ModifyHeader" Value="修改安装" />
+  <String Id="ModifyRepairButton" Value="修复(&amp;R)" />
+  <String Id="ModifyUninstallButton" Value="卸载(&amp;U)" />
+  <String Id="ModifyCancelButton" Value="取消(&amp;C)" />
+
+  <!-- ============ 完成页 ============ -->
+  <String Id="SuccessHeader" Value="安装完成" />
+  <String Id="SuccessCacheHeader" Value="缓存已成功完成" />
+  <String Id="SuccessInstallHeader" Value="安装已成功完成" />
+  <String Id="SuccessLayoutHeader" Value="副本创建已成功完成" />
+  <String Id="SuccessModifyHeader" Value="修改已成功完成" />
+  <String Id="SuccessRepairHeader" Value="修复已成功完成" />
+  <String Id="SuccessUninstallHeader" Value="卸载已成功完成" />
+  <String Id="SuccessUnsafeUninstallHeader" Value="卸载已成功完成" />
+  <String Id="SuccessLaunchButton" Value="启动(&amp;L)" />
+  <String Id="SuccessRestartText" Value="需要重新启动电脑才能使用本软件。" />
+  <String Id="SuccessUninstallRestartText" Value="需要重新启动电脑才能完成软件卸载。" />
+  <String Id="SuccessRestartButton" Value="重启(&amp;R)" />
+  <String Id="SuccessCloseButton" Value="关闭(&amp;C)" />
+
+  <!-- ============ 失败页 ============ -->
+  <String Id="FailureHeader" Value="安装失败" />
+  <String Id="FailureCacheHeader" Value="缓存失败" />
+  <String Id="FailureInstallHeader" Value="安装失败" />
+  <String Id="FailureLayoutHeader" Value="创建副本失败" />
+  <String Id="FailureModifyHeader" Value="修改失败" />
+  <String Id="FailureRepairHeader" Value="修复失败" />
+  <String Id="FailureUninstallHeader" Value="卸载失败" />
+  <String Id="FailureUnsafeUninstallHeader" Value="卸载失败" />
+  <String Id="FailureHyperlinkLogText" Value="有一个或多个问题导致安装失败。请解决这些问题后重试。详细信息请查看 &lt;a href=&quot;#&quot;&gt;日志文件&lt;/a&gt;。" />
+  <String Id="FailureRestartText" Value="需要重新启动电脑才能完成软件的回滚。" />
+  <String Id="FailureRestartButton" Value="重启(&amp;R)" />
+  <String Id="FailureCloseButton" Value="关闭(&amp;C)" />
+
+  <!-- ============ 文件占用（要更新的文件正被其他程序使用） ============ -->
+  <String Id="FilesInUseTitle" Value="文件正在使用中" />
+  <String Id="FilesInUseLabel" Value="以下应用程序正在使用需要更新的文件：" />
+  <String Id="FilesInUseNetfxCloseRadioButton" Value="关闭这些应用程序(&amp;A)。" />
+  <String Id="FilesInUseCloseRadioButton" Value="关闭这些应用程序，并在安装后尝试重新启动它们(&amp;A)。" />
+  <String Id="FilesInUseDontCloseRadioButton" Value="不关闭应用程序，稍后需要重启电脑(&amp;D)。" />
+  <String Id="FilesInUseRetryButton" Value="重试(&amp;R)" />
+  <String Id="FilesInUseIgnoreButton" Value="忽略(&amp;I)" />
+  <String Id="FilesInUseExitButton" Value="退出(&amp;X)" />
+</WixLocalization>

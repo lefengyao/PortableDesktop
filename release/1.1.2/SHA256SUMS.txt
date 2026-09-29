@@ -1,0 +1,4 @@
+815e8b48f0a62fff610ff39afc60aa61a267bfadd22a6ed1c57421191e224fe4 *PortableDesktop-1.1.2-Setup.exe
+658ec04b1d427fb13d7b1ea5ff1abe60fc6b4b65f271cbc5bfec3d8fbbfc0455 *PortableDesktop-1.1.2.msi
+69a199395c2f2caeba17f2e5614006b60516f271723a4641784362e1dbdf86eb *PortableDesktop-1.1.2-portable.exe
+ad8bbcd2f8663f4a1efdc118de622ab0390e5b8d71b2463fe3dd9e220fe5462c *PortableDesktop-1.1.2-framework-dependent.zip

@@ -26,3 +26,15 @@ Desktop.ini
 
 # 自包含发行版（大文件不入库）
 publish-selfcontained/
+
+# WiX 构建产物（wixpdb 保留源码级调试信息，也不进 git）
+# ⚠ 2026-09-29 修正：原来整目录忽略 installer/，把 Bundle.wxs 和 zh-CN.wxl
+#   这两个**源文件**也挡在版本库外了。这里只忽略打包产物。
+installer/*.msi
+installer/*.exe
+installer/*.wixpdb
+
+# 发行版归档：按版本号分目录，二进制不入库，只留 README.md 与 SHA256SUMS.txt
+release/**/*.exe
+release/**/*.msi
+release/**/*.zip

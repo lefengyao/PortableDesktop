@@ -1,0 +1,69 @@
+<!--
+  便携桌面 单文件 EXE 安装程序（Burn 引导程序，内部包着 MSI）。
+
+  与 OpsHelper 同一套方案（已实测踩平所有坑）：
+  - 双击即装的 .exe，分发方便；
+  - 自带「选项」页可以选安装位置（FolderEditbox + 浏览按钮 = 资源管理器选目录）；
+    主题必须用 *LargeLicense 系列 —— hyperlinkLicense 小主题的 Options 页没有布局，
+    点开一片空白（OpsHelper 2026-09-21 实测）；
+  - Burn 把自己缓存到 %LOCALAPPDATA%\Package Cache\，卸载不再依赖当初的安装包位置。
+
+  构建（本目录执行）：
+    python .dotnet.py wix build Bundle.wxs -arch x64 ^
+      -ext WixToolset.BootstrapperApplications.wixext -culture zh-CN ^
+      -d IconFile=<app.ico 绝对路径> -d MsiFile=<MSI 绝对路径> -d LocFile=zh-CN.wxl ^
+      -o PortableDesktop-Setup-v1.1.2.exe
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+
+  <Bundle Name="便携桌面"
+          Version="1.1.2"
+          Manufacturer="PortableDesktop"
+          UpgradeCode="BEFCD536-A5AC-4D3A-A370-AC63836C8F43"
+          IconSourceFile="$(IconFile)"
+          Compressed="yes">
+
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication Theme="hyperlinkLargeLicense"
+                                              LocalizationFile="$(var.LocFile)"
+                                              LicenseUrl=""
+                                              ShowVersion="yes"
+                                              LaunchTarget="[InstallFolder]\PortableDesktop\PortableDesktop.exe" />
+    </BootstrapperApplication>
+
+    <!--
+      InstallFolder 变量默认留空，由 SetVariable 在 Detect 后用实路径填充。
+      不能写 Type="string" 直接给 "[LocalAppDataFolder]..." —— Burn 的 string 变量
+      不做展开，装/卸都会报 1606（OpsHelper 踩过两轮的坑，结论原样照搬）。
+
+      ⚠ 2026-09-29 修正：这个变量的语义是【父目录】，不是最终安装目录。
+        原来直接当最终目录用（MsiProperty INSTALLFOLDER="[InstallFolder]"），实测两个后果：
+          1) 用户把位置改成一个已有的目录（比如 D:\工具，里面本来就有自己的文件），
+             PortableDesktop.exe 会直接铺进去跟用户的文件混在一起 —— 没有软件专属文件夹，
+             用户看到的观感就是"这安装程序不会自己新建文件夹"；
+          2) 卸载时那个目录因为还留着用户的文件而不会被删，用户看到目录还在，
+             观感就是"卸载不清理"（实测：装到有内容的目录 -> 卸完目录仍在）。
+        现在改成：选项页填父目录，程序自动在其中建「便携桌面」文件夹。默认父目录
+        %LOCALAPPDATA%\Programs，最终安装路径仍是 ...\Programs\PortableDesktop（不变）。
+        这样用户随便选哪个目录，程序都独占一个子文件夹，卸载时整个子文件夹被清掉，
+        不会碰用户自己的文件。
+    -->
+    <Variable Name="InstallFolder"
+              Value=""
+              bal:Overridable="yes"
+              Persisted="yes" />
+
+    <SetVariable Id="ResolveInstallFolder"
+                 Variable="InstallFolder"
+                 Value="[LocalAppDataFolder]Programs"
+                 Condition="NOT InstallFolder" />
+
+    <Chain>
+      <MsiPackage SourceFile="$(MsiFile)" Vital="yes">
+        <!-- 注意结尾拼接：InstallFolder 是父目录，软件目录由这里补上 -->
+        <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]\PortableDesktop" />
+      </MsiPackage>
+    </Chain>
+  </Bundle>
+</Wix>

@@ -30,6 +30,8 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _dragOverlayTimer;
 
     private Effect? _windowShadow;
+    private Storyboard? _emptyStatePulse;
+    private bool _pulseRunning;
     private bool _themeReady;
     private bool _dragActive;
 
@@ -120,23 +122,31 @@ public partial class MainWindow : Window
     {
         ReloadItems();
         PlayWindowEntrance();
-        PlayEmptyStatePulse();
+        // 空状态呼吸动画的生命周期完全由 UpdateEmptyState 管理，
+        // 这里绝不能再无条件启动它 —— 2026-09-28 那次 30% GPU 占用就是它引起的
     }
 
-    /// <summary>整窗淡入 + 上浮。</summary>
+    /// <summary>整窗淡入 + 上浮。播完必须摘掉动画：默认 FillBehavior.HoldEnd
+    /// 会让时钟永远挂在 Active，WPF 渲染循环因此每帧空转（GPU 常驻高占用）。</summary>
     private void PlayWindowEntrance()
     {
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
-        BeginAnimation(OpacityProperty,
-            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260)) { EasingFunction = ease });
-        WindowOffset.BeginAnimation(TranslateTransform.YProperty,
-            new DoubleAnimation(14, 0, TimeSpan.FromMilliseconds(340)) { EasingFunction = ease });
-    }
 
-    private void PlayEmptyStatePulse()
-    {
-        if (FindResource("EmptyStatePulse") is Storyboard pulse)
-            pulse.Begin(this, true);
+        var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260)) { EasingFunction = ease };
+        fade.Completed += (_, _) =>
+        {
+            Opacity = 1;
+            BeginAnimation(OpacityProperty, null);
+        };
+        BeginAnimation(OpacityProperty, fade);
+
+        var rise = new DoubleAnimation(14, 0, TimeSpan.FromMilliseconds(340)) { EasingFunction = ease };
+        rise.Completed += (_, _) =>
+        {
+            WindowOffset.Y = 0;
+            WindowOffset.BeginAnimation(TranslateTransform.YProperty, null);
+        };
+        WindowOffset.BeginAnimation(TranslateTransform.YProperty, rise);
     }
 
     // ========== 标题栏 ==========
@@ -268,6 +278,30 @@ public partial class MainWindow : Window
         var count = _items.Count;
         EmptyState.Visibility = count == 0 ? Visibility.Visible : Visibility.Collapsed;
         CountText.Text = $"{count} 项";
+
+        // 空状态的呼吸动画是 RepeatBehavior="Forever"，元素隐藏后时钟仍在走，
+        // 会持续驱动整窗重渲染（分层窗口 + 全窗投影，GPU 占用极高）。
+        // 它的启停只能由这里按 count 统一管理，别处不得再调 Begin；
+        // 懒加载资源引用，保证"启动即有内容"的路径也不会漏掉对它的控制。
+        _emptyStatePulse ??= FindResource("EmptyStatePulse") as Storyboard;
+        if (_emptyStatePulse == null)
+            return;
+
+        if (count == 0)
+        {
+            if (!_pulseRunning)
+            {
+                EmptyIcon.BeginAnimation(OpacityProperty, null);
+                _emptyStatePulse.Begin(this, true);
+                _pulseRunning = true;
+            }
+        }
+        else if (_pulseRunning)
+        {
+            _emptyStatePulse.Stop(this);
+            EmptyIcon.BeginAnimation(OpacityProperty, null);
+            _pulseRunning = false;
+        }
     }
 
     private void Card_LaunchRequested(object? sender, DesktopItem item) => LaunchItem(item);

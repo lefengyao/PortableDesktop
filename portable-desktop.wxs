@@ -1,0 +1,78 @@
+<!--
+  便携桌面 MSI 安装包（WiX v6）
+  构建（仓库根目录执行）：
+    python .dotnet.py wix build portable-desktop.wxs -arch x64 ^
+      -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext ^
+      -codepage 936 -o installer/PortableDesktop-1.1.2-Setup.msi
+
+  设计约定：
+  - perUser 安装，不需要管理员权限，默认装到 %LocalAppData%\Programs\PortableDesktop
+  - 内嵌 publish-selfcontained 的自包含单文件 exe，目标机无需 .NET 运行时
+  - 用户数据在 %LocalAppData%\PortableDesktop（与安装目录分离），卸载不删数据
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <Package Name="便携桌面"
+           Manufacturer="PortableDesktop"
+           Version="1.1.2"
+           UpgradeCode="1344FB98-5A32-461C-AF57-783BF6219527"
+           Scope="perUser"
+           InstallerVersion="500"
+           Language="2052"
+           Codepage="936"
+           Compressed="yes">
+
+    <SummaryInformation Description="便携桌面 —— 把文件/快捷方式拖进面板，单击启动" />
+
+    <MajorUpgrade DowngradeErrorMessage="已安装了更新版本的 [ProductName]，无法降级安装。" />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- 控制面板/开始菜单里显示的图标。
+         注意别引用主 exe 当图标源：Icon 表会把它原样再嵌一份（MSI 体积翻倍）。 -->
+    <Icon Id="AppIcon.ico" SourceFile="PortableDesktop\app.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
+
+    <!-- 覆盖安装/卸载前提示关闭正在运行的实例 -->
+    <util:CloseApplication Id="ClosePortableDesktop"
+                           Target="PortableDesktop.exe"
+                           CloseMessage="true" RebootPrompt="no" />
+
+    <!-- 用户级安装目录：%LocalAppData%\Programs\PortableDesktop -->
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="ProgramsParentFolder" Name="Programs">
+        <Directory Id="INSTALLFOLDER" Name="PortableDesktop" />
+      </Directory>
+    </StandardDirectory>
+
+    <!-- 开始菜单分组 + 桌面快捷方式 -->
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="AppMenuDir" Name="便携桌面" />
+    </StandardDirectory>
+    <StandardDirectory Id="DesktopFolder" />
+
+    <ComponentGroup Id="MainComponents" Directory="INSTALLFOLDER">
+      <Component Id="MainExe">
+        <File Id="PortableDesktopExe"
+              Source="publish-selfcontained\PortableDesktop.exe"
+              KeyPath="yes" />
+        <Shortcut Id="StartMenuShortcut" Directory="AppMenuDir"
+                  Name="便携桌面" Description="便携桌面 —— 单击启动"
+                  WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" />
+        <Shortcut Id="DesktopShortcut" Directory="DesktopFolder"
+                  Name="便携桌面" Description="便携桌面 —— 单击启动"
+                  WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" />
+      </Component>
+
+      <!-- 空菜单分组目录的清理（需要独立组件 + HKCU KeyPath） -->
+      <Component Id="MenuDirCleanup" Directory="AppMenuDir">
+        <RemoveFolder Id="RemoveAppMenuDir" Directory="AppMenuDir" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\PortableDesktop\Installer"
+                       Name="ShortcutDir" Type="string" Value="[AppMenuDir]" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+  </Package>
+</Wix>
